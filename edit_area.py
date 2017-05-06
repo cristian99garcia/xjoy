@@ -45,7 +45,7 @@ class Image:
         self.pixbuf = None
         self.width = 0
         self.height = 0
-    
+
     @classmethod
     def new_from_file(self, file):
         image = Image()
@@ -57,8 +57,8 @@ class Image:
         return image
 
     @classmethod
-    def new_from_name(self, name):
-        return Image.new_from_file(U.get_drawable_image(name))
+    def new_from_name(self, name, resp_name=None):
+        return Image.new_from_file(U.get_drawable_image(name, resp_name))
 
 
 class DrawableObject(GObject.GObject):
@@ -78,7 +78,9 @@ class DrawableObject(GObject.GObject):
         self.image = image
 
         self.rect.set_pos(x, y)
-        self.rect.set_size(self.image.width, self.image.height)
+
+        if self.image is not None:
+            self.rect.set_size(self.image.width, self.image.height)
 
         self.emit("redraw")
 
@@ -114,20 +116,14 @@ class SpecialDrawableButton(DrawableButton):
     def __init__(self, name):
         DrawableButton.__init__(self, False)
 
-        self.ireleased = Image.new_from_name(name)
-        self.ipressed = Image.new_from_name(name + "-pressed")
+        if name in C.PLAYSTATION_MAP:
+            self.rect.set_pos(*C.PLAYSTATION_MAP[name])
 
-        if name == "triangle":
-            self.rect.set_pos(520, 83.49)
+        if "trigger" in name:
+            name = "trigger"
 
-        elif name == "circle":
-            self.rect.set_pos(570.932, 133.0)
-
-        elif name == "x":
-            self.rect.set_pos(520, 184.508)
-
-        elif name == "square":
-            self.rect.set_pos(469.856, 133.0)
+        self.ireleased = Image.new_from_name(name, "button")
+        self.ipressed = Image.new_from_name(name + "-pressed", "button-pressed")
 
         self.set_image(self.ireleased)
 
@@ -178,17 +174,17 @@ class Direccional(DrawableObject):
         if self.x == 0:
             if self.y == 0:
                 self.set_direction(C.Direction.NONE)
-            
+
             elif self.y < 0:
                 self.set_direction(C.Direction.UP)
-            
+
             elif self.y > 0:
                 self.set_direction(C.Direction.DOWN)
 
         elif self.x < 0:
             if self.y == 0:
                 self.set_direction(C.Direction.LEFT)
-            
+
             elif self.y < 0:
                 self.set_direction(C.Direction.LEFT + C.Direction.UP)
 
@@ -198,7 +194,7 @@ class Direccional(DrawableObject):
         elif self.x > 0:
             if self.y == 0:
                 self.set_direction(C.Direction.RIGHT)
-            
+
             elif self.y < 0:
                 self.set_direction(C.Direction.RIGHT + C.Direction.UP)
 
@@ -221,11 +217,8 @@ class Stick(Direccional):
         self.images[C.Direction.LEFT] =                     Image.new_from_name("stick-left")
         self.images[C.Direction.LEFT + C.Direction.UP] =    Image.new_from_name("stick-left-up")
 
-        if name == "left-stick":
-            self.rect.set_pos(194.141, 214.023)
-
-        elif name == "right-stick":
-            self.rect.set_pos(394.057, 214.023)
+        if name in C.PLAYSTATION_MAP.keys():
+            self.rect.set_pos(*C.PLAYSTATION_MAP[name])
 
         self.set_image(self.images[C.Direction.NONE])
 
@@ -245,7 +238,9 @@ class DPad(Direccional):
         self.images[C.Direction.LEFT] =                     Image.new_from_name("dpad-left")
         self.images[C.Direction.LEFT + C.Direction.UP] =    Image.new_from_name("dpad-left-up")
 
-        self.rect.set_pos(84.761, 102.339)
+        if "dpad" in C.PLAYSTATION_MAP:
+            self.rect.set_pos(*C.PLAYSTATION_MAP["dpad"])
+
         self.set_image(self.images[C.Direction.NONE])
 
 
@@ -263,12 +258,12 @@ class DrawableJoystick(GObject.GObject):
 
         self.objects = {}
 
-        for x in ["triangle", "circle", "x", "square"]:
-            self.objects[x] = SpecialDrawableButton(x)
+        for name in C.TRANSLATED_BUTTONS.values():
+            self.objects[name] = SpecialDrawableButton(name)
 
-        for x in ["left-stick", "right-stick"]:
-            self.objects[x] = Stick(x)
-        
+        for stick in ["left-stick", "right-stick"]:
+            self.objects[stick] = Stick(stick)
+
         self.objects["dpad"] = DPad()
 
         for name in self.objects.keys():
@@ -286,7 +281,7 @@ class DrawableJoystick(GObject.GObject):
         if self.joystick is not None:
             # TODO: disconnect
             pass
-        
+
         self.joystick = joy
         self.joystick.connect("button-pressed", self._pressed_cb)
         self.joystick.connect("button-released", self._released_cb)
@@ -296,19 +291,19 @@ class DrawableJoystick(GObject.GObject):
         self.emit("redraw")  # TODO: send a region to redraw
 
     def _pressed_cb(self, joy, button):
-        data = {"trigger": "triangle", "thumb": "circle", "thumb2": "x", "top": "square"}
-        if button in data:
-            self.objects[data[button]].set_pressed(True)
+        if button in C.TRANSLATED_BUTTONS:
+            name = C.TRANSLATED_BUTTONS[button]
+            self.objects[name].set_pressed(True)
 
     def _released_cb(self, joy, button):
-        data = {"trigger": "triangle", "thumb": "circle", "thumb2": "x", "top": "square"}
-        if button in data:
-            self.objects[data[button]].set_pressed(False)
+        if button in C.TRANSLATED_BUTTONS:
+            name = C.TRANSLATED_BUTTONS[button]
+            self.objects[name].set_pressed(False)
 
     def _axis_moved_cb(self, joy, axis, value):
         if axis == "x":
             self.objects["left-stick"].set_x(value)
-        
+
         elif axis == "y":
             self.objects["left-stick"].set_y(value)
 
@@ -320,9 +315,10 @@ class DrawableJoystick(GObject.GObject):
 
         elif axis == "hat0x":
             self.objects["dpad"].set_x(value)
-        
+
         elif axis == "hat0y":
             self.objects["dpad"].set_y(value)
+
 
 class EditArea(Gtk.DrawingArea):
 
@@ -343,7 +339,12 @@ class EditArea(Gtk.DrawingArea):
         Gdk.cairo_set_source_pixbuf(context, self.drawable.background, 0, 7)
         context.paint()
 
-        for name in self.drawable.objects.keys():
+        list = self.drawable.objects.keys()
+        for name in C.FRONT_OBJECTS:
+            list.remove(name)
+            list.insert(-1, name)
+
+        for name in list:
             self.draw_object(context, self.drawable.objects[name])
 
     def draw_object(self, context, object):

@@ -63,14 +63,23 @@ def get_gamepad_image(name):
     return os.path.join(os.path.dirname(__file__), "data", "gamepads", name + ".png")
 
 
-def get_drawable_image(name):
-    return os.path.join(os.path.dirname(__file__), "data", "icons", name + ".png")
+def get_drawable_image(name, resp_name=None):
+    file = os.path.join(os.path.dirname(__file__), "data", "icons", name + ".png")
+    if os.path.exists(file):
+        return file
+
+    if resp_name is not None:
+        return get_drawable_image(resp_name)
+
+    else:
+        # Error
+        return None
 
 
 def abs(value):
     if value > 0:
         return 1
-    
+
     elif value < 0:
         return -1
 

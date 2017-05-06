@@ -76,6 +76,46 @@ BUTTONS = {
 }
 
 
+TRANSLATED_BUTTONS = {
+    "base": "l1",
+    "base2": "r1",
+    "trigger": "triangle",
+    "thumb": "circle",
+    "thumb2": "x",
+    "top": "square",
+    "base3": "select",
+    "base4": "start",
+    "top2": "trigger-left",
+    "pinkie": "trigger-right",
+    "base5": "l3",
+    "base6": "r3",
+}
+
+
+PLAYSTATION_MAP = {
+    "triangle": (526, 83),
+    "circle": (576, 134),
+    "x": (526, 185),
+    "square": (475, 134),
+    "start": (386, 158),
+    "select": (263, 159),
+    "trigger-left": (0, 0),
+    "trigger-right": (593, 0),
+    "l3": (220, 238),
+    "r3": (420, 238),
+    "l1": (99, 0),
+    "r1": (506, 0),
+    "left-stick": (197, 216),
+    "right-stick": (397, 216),
+    "dpad": (86, 103),
+}
+
+
+FRONT_OBJECTS = [
+    "l3",
+    "r3"
+]
+
 class Direction:
     UP = "up"
     RIGHT = "right"
