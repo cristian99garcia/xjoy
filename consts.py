@@ -116,6 +116,41 @@ FRONT_OBJECTS = [
     "r3"
 ]
 
+
+class ActionType:
+    MOUSE = 0
+    KEYBOARD = 1
+
+
+class MouseActionType:
+    CLICK = 0
+    MOVE_X = 1
+    MOVE_Y = 2
+    SCROLL_H = 3
+    SCROLL_V = 4
+
+
+class ActionState:
+    OFF = 0
+    ON = 1
+
+
+class Action:
+
+    def __init__(self, type, data=[]):
+        self.type = type
+        self.data = data
+
+
+TEST_SETTINGS = {
+    "x": Action(ActionType.MOUSE, [MouseActionType.MOVE_X, 10]),
+    "y": Action(ActionType.MOUSE, [MouseActionType.MOVE_Y, 10]),
+    "thumb": Action(ActionType.MOUSE, [MouseActionType.CLICK, 2]),
+    "thumb2": Action(ActionType.MOUSE, [MouseActionType.CLICK, 1]),
+    "rz": Action(ActionType.MOUSE, [MouseActionType.SCROLL_V, 1])
+}
+
+
 class Direction:
     UP = "up"
     RIGHT = "right"

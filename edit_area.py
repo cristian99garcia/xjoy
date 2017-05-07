@@ -293,6 +293,7 @@ class DrawableJoystick(GObject.GObject):
     def _pressed_cb(self, joy, button):
         if button in C.TRANSLATED_BUTTONS:
             name = C.TRANSLATED_BUTTONS[button]
+
             self.objects[name].set_pressed(True)
 
     def _released_cb(self, joy, button):

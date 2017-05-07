@@ -84,3 +84,15 @@ def abs(value):
         return -1
 
     return 0
+
+
+def invert_abs(value):
+    value = abs(value)
+
+    if value > 0:
+        return -1
+
+    elif value < 0:
+        return 1
+
+    return 0
