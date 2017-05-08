@@ -43,10 +43,11 @@ class MainWindow(Gtk.Window):
         self.scroll_direction = [0, 0]
         self.mouse_movement_id = None
         self.scroll_id = None
+        self.joystick = None
 
         if TESTING:
             self.settings = C.TEST_SETTINGS
-        
+
         else:
             self.settings = {}
 
@@ -62,15 +63,38 @@ class MainWindow(Gtk.Window):
         self.manager.start()
         self.show_all()
 
+    def disconnect_joystick_signals(self):
+        if self.joystick is None:
+            return
+
+        for f in [self._pressed_cb, self._released_cb, self._axis_moved_cb]:
+            self.joystick.disconnect_by_func(f)
+
     def _joys_changed_cb(self, manager):
         joys = manager.get_connected_joysticks()
 
-        joystick = joys[0]  # TODO: que el usuario elija
-        joystick.connect("button-pressed", self._pressed_cb)
-        joystick.connect("button-released", self._released_cb)
-        joystick.connect("axis-moved", self._axis_moved_cb)
+        if len(joys) == 0:
+            self.edit_area.set_joystick(None)
+            self.disconnect_joystick_signals()
+            self.set_title("XJoy")
+            return
 
-        self.edit_area.set_joystick(joystick)
+        joystick = joys[0]  # TODO: que el usuario elija
+        if self.joystick == joystick:
+            return
+
+        self.disconnect_joystick_signals()
+
+        del self.joystick
+        self.joystick = joystick
+
+        self.set_title("XJoy - " + self.joystick.get_name())
+
+        self.joystick.connect("button-pressed", self._pressed_cb),
+        self.joystick.connect("button-released", self._released_cb),
+        self.joystick.connect("axis-moved", self._axis_moved_cb),
+
+        self.edit_area.set_joystick(self.joystick)
 
     def _exit(self, window, event):
         self.manager.disconnect_all()

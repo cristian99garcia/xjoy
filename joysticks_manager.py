@@ -53,6 +53,9 @@ class Joystick(GObject.GObject):
 
         self.watch_id = GObject.io_add_watch(devfile, GObject.IO_IN, self._watch_cb)
 
+    def get_name(self):
+        return self.name or ""
+
     def disconnect(self):
         self.connected = False
         GObject.source_remove(self.watch_id)
@@ -137,9 +140,11 @@ class JoysticksManager(GObject.GObject):
     def _disconnected(self, monitor, path):
         if os.path.basename(path).startswith("js"):
             joy = self.get_joystick_from_file(path)
-            joy.disconnect()
-            self.joysticks.remove(joy)
-            self.emit("joysticks-changed")
+
+            if joy is not None:
+                joy.disconnect()
+                self.joysticks.remove(joy)
+                self.emit("joysticks-changed")
 
     def get_joystick_from_file(self, file):
         for joy in self.joysticks:
