@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+import json
 import array
 import fcntl
 
@@ -96,3 +97,83 @@ def invert_abs(value):
         return 1
 
     return 0
+
+
+def event_type_to_str(action):
+    return "%d:%d" % (action.type, action.data[0])
+
+
+def str_to_event_type(value):
+    numbers = value.split(":")
+    return int(numbers[0]), int(numbers[1])
+
+
+def load_settings_from_file(_file):
+    """
+    Convert a saved dict to a ready to use dict.
+
+    Settings structure:
+    {
+        EVENT_NAME: {
+            "type": EVENT_TYPE,
+            "data": DATA
+        },
+        EVENT_NAME: {
+            "type": EVENT_TYPE,
+            "data": DATA
+        },
+        EVENT_NAME: {
+            "type": EVENT_TYPE,
+            "data": DATA
+        }
+    }
+
+    EVENT_TYPE structure:
+    DEVICE_TYPE:EVENT
+
+    DATA structure:
+    [
+        ACTION_TYPE,
+        VALUE,
+        VALUE,
+        VALUE
+    ]
+    """
+
+    data = {}
+    converted = {}
+
+    with open(_file, "r") as file:
+        data = json.loads(file.read())
+
+    for key in data:
+        device, event_type = str_to_event_type(data[key]["type"])
+        converted[str(key)] = C.Action(device, [event_type] + data[key]["data"])
+
+    return converted
+
+
+def convert_settings(settings):
+    """
+    Convert a settings dict to a ready to save dict
+    """
+    converted = {}
+
+    for key in settings.keys():
+        # key = EVENT_NAME
+        action = settings[key]
+
+        converted[key] = {
+            "type": event_type_to_str(action),
+            "data": action.data[1:]
+        }
+
+    return converted
+
+
+def save_settings(settings, _file="test.json"):
+    converted = convert_settings(settings)
+    data = json.dumps(converted, indent=4, separators=(",", ": "))
+
+    with open(_file, "w") as file:
+        file.write(data)

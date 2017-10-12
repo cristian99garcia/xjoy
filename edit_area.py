@@ -361,7 +361,6 @@ class EditArea(Gtk.DrawingArea):
     def set_joystick(self, joy):
         if joy is None:
             self.drawable = None
-            self.redraw()
             return
 
         if self.drawable is not None:

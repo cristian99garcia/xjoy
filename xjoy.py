@@ -10,6 +10,7 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("GdkPixbuf", "2.0")
 
 from gi.repository import Gtk
+from gi.repository import Gio
 from gi.repository import GLib
 
 import utils as U
@@ -29,78 +30,74 @@ if USE_X:
 TESTING = True
 
 
-class MainWindow(Gtk.Window):
+class XJoyWindow(Gtk.ApplicationWindow):
 
-    def __init__(self):
-        Gtk.Window.__init__(self)
+    def __init__(self, manager, application=None):
+        Gtk.ApplicationWindow.__init__(self, application=application)
 
         self.set_size_request(690, 428)
         self.set_resizable(False)
         self.set_title("XJoy")
-        self.connect("delete-event", self._exit)
+
+        self.manager = manager
+
+        self.edit_area = EditArea()
+        self.add(self.edit_area)
+
+        self.show_all()
+
+
+class XJoyApp(Gtk.Application):
+
+    def __init__(self):
+        Gtk.Application.__init__(self, application_id="org.zades.xjoy", flags=Gio.ApplicationFlags.FLAGS_NONE)
+        self.window = None
 
         self.mouse_direction = [0, 0]
         self.scroll_direction = [0, 0]
         self.mouse_movement_id = None
         self.scroll_id = None
-        self.joystick = None
-
-        if TESTING:
-            self.settings = C.TEST_SETTINGS
-
-        else:
-            self.settings = {}
 
         self.keyboard = Keyboard()
         self.mouse = Mouse()
 
-        self.manager = JoysticksManager()
-        self.manager.connect("joysticks-changed", self._joys_changed_cb)
+    def do_startup(self):
+        Gtk.Application.do_startup(self)
 
-        self.edit_area = EditArea()
-        self.add(self.edit_area)
+        action = Gio.SimpleAction.new("quit", None)
+        action.connect("activate", self.on_quit)
+        self.add_action(action)
 
-        self.manager.start()
-        self.show_all()
+    def do_activate(self):
+        if not self.window:
+            self.manager = JoysticksManager()
+            self.manager.connect("joysticks-changed", self._joys_changed_cb)
 
-    def disconnect_joystick_signals(self):
-        if self.joystick is None:
-            return
+            self.window = XJoyWindow(self.manager, application=self)
+            self.window.connect("delete-event", self._delete_event_cb)
 
-        for f in [self._pressed_cb, self._released_cb, self._axis_moved_cb]:
-            self.joystick.disconnect_by_func(f)
+            if TESTING:
+                self.settings = C.TEST_SETTINGS
+
+            else:
+                self.settings = {}
+
+            self.manager.start()  # FIXME: No debería estar acá, y si no va a haber ventana?
+
+        self.window.present()
+
+    def _delete_event_cb(self, *args):
+        self.on_quit()
 
     def _joys_changed_cb(self, manager):
         joys = manager.get_connected_joysticks()
 
-        if len(joys) == 0:
-            self.edit_area.set_joystick(None)
-            self.disconnect_joystick_signals()
-            self.set_title("XJoy")
-            return
-
         joystick = joys[0]  # TODO: que el usuario elija
-        if self.joystick == joystick:
-            return
+        joystick.connect("button-pressed", self._pressed_cb)
+        joystick.connect("button-released", self._released_cb)
+        joystick.connect("axis-moved", self._axis_moved_cb)
 
-        self.disconnect_joystick_signals()
-
-        del self.joystick
-        self.joystick = joystick
-
-        self.set_title("XJoy - " + self.joystick.get_name())
-
-        self.joystick.connect("button-pressed", self._pressed_cb),
-        self.joystick.connect("button-released", self._released_cb),
-        self.joystick.connect("axis-moved", self._axis_moved_cb),
-
-        self.edit_area.set_joystick(self.joystick)
-
-    def _exit(self, window, event):
-        self.manager.disconnect_all()
-        Gtk.main_quit()
-
-        return False
+        self.window.edit_area.set_joystick(joystick)
 
     def _pressed_cb(self, joy, button):
         if button in self.settings:
@@ -178,7 +175,11 @@ class MainWindow(Gtk.Window):
         elif self.scroll_direction != [0, 0] and self.scroll_id is None:
             self.scroll_id = GLib.timeout_add(50, self._scroll)
 
+    def on_quit(self, *args):
+        self.manager.disconnect_all()
+        self.quit()
+
 
 if __name__ == "__main__":
-    MainWindow()
-    Gtk.main()
+    app = XJoyApp()
+    app.run(sys.argv)
