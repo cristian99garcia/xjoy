@@ -40,6 +40,7 @@ class XJoyWindow(Gtk.ApplicationWindow):
         self.set_size_request(690, 428)
         self.set_resizable(False)
         self.set_title("XJoy")
+        self.set_icon_from_file("data/icons/xjoy.svg")
 
         self.manager = manager
 
