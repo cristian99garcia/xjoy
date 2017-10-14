@@ -4,6 +4,7 @@
 import gi
 import os
 import sys
+import signal
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
@@ -272,5 +273,7 @@ class XJoyApp(Gtk.Application):
 
 
 if __name__ == "__main__":
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
+
     app = XJoyApp()
-    app.run(sys.argv)
+    sys.exit(app.run(sys.argv))
