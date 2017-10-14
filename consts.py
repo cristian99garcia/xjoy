@@ -3,7 +3,7 @@
 
 TESTING = True
 
-
+APP_ID = "org.zades.xjoy"
 INPUT_PATH = "/dev/input"
 
 
@@ -176,3 +176,8 @@ class Direction:
     DOWN = "down"
     LEFT = "left"
     NONE = "none"
+
+
+AUTHORS = [
+    "Cristian García"
+]

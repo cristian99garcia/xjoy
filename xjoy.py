@@ -10,16 +10,19 @@ gi.require_versions({
     "Gtk": "3.0",
     "Gdk": "3.0",
     "GdkPixbuf": "2.0",
+    "AppIndicator3": "0.1",
 })
 
 from gi.repository import Gtk
 from gi.repository import Gio
 from gi.repository import GLib
 from gi.repository import GObject
+from gi.repository import AppIndicator3
 
 import utils as U
 import consts as C
 
+from tray_icon import TrayIcon
 from edit_area import EditArea
 from joysticks_manager import JoysticksManager
 
@@ -62,7 +65,10 @@ class XJoyWindow(Gtk.ApplicationWindow):
 class XJoyApp(Gtk.Application):
 
     def __init__(self):
-        Gtk.Application.__init__(self, application_id="org.zades.xjoy", flags=Gio.ApplicationFlags.FLAGS_NONE)
+        Gtk.Application.__init__(self,
+            application_id=C.APP_ID,
+            flags=Gio.ApplicationFlags.HANDLES_OPEN | Gio.ApplicationFlags.IS_SERVICE)
+
         self.window = None
 
         self.mouse_direction = [0, 0]
@@ -70,12 +76,23 @@ class XJoyApp(Gtk.Application):
         self.mouse_movement_id = None
         self.scroll_id = None
         self.setting = False
+        self.hide_window = not C.TESTING
+        self.trayicon = None
 
         self.keyboard = Keyboard()
         self.mouse = Mouse()
 
     def do_startup(self):
         Gtk.Application.do_startup(self)
+
+        items = [
+            ("_Show window", lambda item: self.activate()),
+            ("_About", self.on_about),
+            ("_Exit", self.on_quit),
+        ]
+
+        self.trayicon = TrayIcon(items)
+        self.trayicon.connect("show-hide-window", self._show_hide_window_cb)
 
         action = Gio.SimpleAction.new("quit", None)
         action.connect("activate", self.on_quit)
@@ -96,6 +113,8 @@ class XJoyApp(Gtk.Application):
         self.set_accels_for_action("app.reset-buttons", ["<Primary>R"]);
         self.add_action(action);
 
+        self.activate()
+
     def do_activate(self):
         if not self.window:
             self.manager = JoysticksManager()
@@ -112,12 +131,25 @@ class XJoyApp(Gtk.Application):
             else:
                 self.settings = {}
 
-            self.manager.start()  # FIXME: No debería estar acá, y si no va a haber ventana?
+            self.manager.start()  # FIXME: No debería estar acá, y si la ventana va a estar oculta?
 
-        self.window.present()
+        if not self.hide_window:
+            self.window.show_all()
+
+        else:
+            self.window.hide()
+
+        self.trayicon.set_visible(True)  # Evitar que se oculte el icono de la bandeja
+
+    def _show_hide_window_cb(self, icon):
+        self.hide_window = not self.hide_window
+        self.activate()
 
     def _delete_event_cb(self, *args):
-        self.on_quit()
+        self.hide_window = True
+        self.activate()
+
+        return True
 
     def _joys_changed_cb(self, manager):
         joys = manager.get_connected_joysticks()
@@ -270,13 +302,36 @@ class XJoyApp(Gtk.Application):
     def _set_cb(self, window):
         self.setting = False
 
+    def on_about(self, *args):
+        dialog = Gtk.AboutDialog()
+
+        dialog.set_program_name("XJoy")
+        dialog.set_logo(U.get_app_icon_pixbuf())
+        dialog.set_copyright("Copyright \xc2\xa9 2017 Cristian García")
+        dialog.set_authors(C.AUTHORS)
+        dialog.set_license_type(Gtk.License.GPL_3_0)
+        # dialog.set_documenters(documenters)
+        dialog.set_website("https://github.com/cristian99garcia/xjoy")
+        dialog.set_website_label("XJoy source code")
+        dialog.set_title("")
+
+        if self.window is not None:
+            dialog.set_transient_for(self.window)
+            dialog.set_modal(True)
+
+        dialog.run()
+        dialog.close()
+
     def on_quit(self, *args):
         self.manager.disconnect_all()
         self.quit()
 
 
 if __name__ == "__main__":
+    # "signal" module allow do Ctrl + C to kill the process
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     app = XJoyApp()
-    sys.exit(app.run(sys.argv))
+    exit_status = app.run(sys.argv)
+
+    sys.exit(exit_status)

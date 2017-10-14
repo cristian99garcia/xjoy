@@ -6,6 +6,8 @@ import json
 import array
 import fcntl
 
+from gi.repository import GdkPixbuf
+
 import consts as C
 
 
@@ -83,6 +85,14 @@ def get_drawable_image(name, resp_name=None):
 
 def get_app_icon_file():
     return os.path.join(get_local_dir(), "data", "icons", "xjoy.svg")
+
+
+def get_app_icon_pixbuf(width=210, height=210):
+    return GdkPixbuf.Pixbuf.new_from_file_at_size(get_app_icon_file(), width, height)
+
+
+def get_tray_icon_file():
+    return os.path.join(get_local_dir(), "data", "icons", "xjoy-trayicon.svg")
 
 
 def abs(value):
