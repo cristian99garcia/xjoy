@@ -76,20 +76,20 @@ BUTTONS = {
 }
 
 
-TRANSLATED_BUTTONS = {
-    "base": "l1",
-    "base2": "r1",
-    "trigger": "triangle",
-    "thumb": "circle",
-    "thumb2": "x",
-    "top": "square",
-    "base3": "select",
-    "base4": "start",
-    "top2": "trigger-left",
-    "pinkie": "trigger-right",
-    "base5": "l3",
-    "base6": "r3",
-}
+PLAYSTATION_BUTTON_NAMES = [
+    "x",
+    "circle",
+    "triangle",
+    "square",
+    "l1",
+    "trigger-left",
+    "r1",
+    "trigger-right",
+    "select",
+    "start",
+    "l3",
+    "r3"
+]
 
 
 PLAYSTATION_MAP = {
@@ -145,8 +145,8 @@ class Action:
 TEST_SETTINGS = {
     "x": Action(ActionType.MOUSE, [MouseActionType.MOVE_X, 10]),
     "y": Action(ActionType.MOUSE, [MouseActionType.MOVE_Y, 10]),
-    "thumb": Action(ActionType.MOUSE, [MouseActionType.CLICK, 2]),
-    "thumb2": Action(ActionType.MOUSE, [MouseActionType.CLICK, 1]),
+    289: Action(ActionType.MOUSE, [MouseActionType.CLICK, 2]),          # Circle
+    290: Action(ActionType.MOUSE, [MouseActionType.CLICK, 1]),          # X
     "rz": Action(ActionType.MOUSE, [MouseActionType.SCROLL_V, 1])
 }
 

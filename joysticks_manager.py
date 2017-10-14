@@ -17,8 +17,8 @@ from gi.repository import GObject
 class Joystick(GObject.GObject):
 
     __gsignals__ = {
-        "button-pressed": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, [GObject.TYPE_STRING]),
-        "button-released": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, [GObject.TYPE_STRING]),
+        "button-pressed": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, [GObject.TYPE_INT]),
+        "button-released": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, [GObject.TYPE_INT]),
         "axis-moved": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, [GObject.TYPE_STRING, GObject.TYPE_FLOAT]),
     }
 
@@ -64,7 +64,7 @@ class Joystick(GObject.GObject):
         if evbuf:
             time, value, type, number = struct.unpack("IhBB", evbuf)
 
-            #if type & 0x80:  # initial
+            # if type & 0x80:  # initial
 
             if type & 0x01:
                 button = self.button_map[number]
@@ -138,6 +138,7 @@ class JoysticksManager(GObject.GObject):
         if os.path.basename(path).startswith("js"):
             joy = self.get_joystick_from_file(path)
             joy.disconnect()
+
             self.joysticks.remove(joy)
             self.emit("joysticks-changed")
 

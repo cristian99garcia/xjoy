@@ -52,10 +52,10 @@ def get_joystick_button_map(devfile):
     buf = array.array("H", [0] * 200)
     fcntl.ioctl(devfile, 0x80406a34, buf)
 
-    for btn in buf[:get_joystick_buttons(devfile)]:
-        btn_name = C.BUTTONS.get(btn, "unknown(0x%03x)" % btn)
-        button_map.append(btn_name)
-        button_states[btn_name] = 0
+    for button in buf[:get_joystick_buttons(devfile)]:
+        # btn_name = button  # C.BUTTONS.get(button, "unknown(0x%03x)" % button)
+        button_map.append(button)
+        button_states[button] = 0
 
     return button_map, button_states
 
@@ -114,17 +114,24 @@ def load_settings_from_file(_file):
 
     Settings structure:
     {
-        EVENT_NAME: {
-            "type": EVENT_TYPE,
-            "data": DATA
+        "buttons": {
+            NAME: id,
+            NAME: id,
+            NAME: id
         },
-        EVENT_NAME: {
-            "type": EVENT_TYPE,
-            "data": DATA
-        },
-        EVENT_NAME: {
-            "type": EVENT_TYPE,
-            "data": DATA
+        "actions": {
+            EVENT_NAME: {
+                "type": EVENT_TYPE,
+                "data": DATA
+            },
+            EVENT_NAME: {
+                "type": EVENT_TYPE,
+                "data": DATA
+            },
+            EVENT_NAME: {
+                "type": EVENT_TYPE,
+                "data": DATA
+            }
         }
     }
 
@@ -146,24 +153,34 @@ def load_settings_from_file(_file):
     with open(_file, "r") as file:
         data = json.loads(file.read())
 
-    for key in data:
-        device, event_type = str_to_event_type(data[key]["type"])
-        converted[str(key)] = C.Action(device, [event_type] + data[key]["data"])
+    buttons = data["buttons"]
+    actions = data["actions"]
 
-    return converted
+    for key in actions.keys():
+        name = str(key)
+        device, event_type = str_to_event_type(actions[name]["type"])
+        if name.isdigit():
+            name = int(name)
+
+        converted[name] = C.Action(device, [event_type] + actions[key]["data"])
+
+    return converted, buttons
 
 
-def convert_settings(settings):
+def convert_settings(settings, buttons):
     """
     Convert a settings dict to a ready to save dict
     """
-    converted = {}
+    converted = {
+        "buttons": buttons,
+        "actions": {}
+    }
 
     for key in settings.keys():
         # key = EVENT_NAME
         action = settings[key]
 
-        converted[key] = {
+        converted["actions"][key] = {
             "type": event_type_to_str(action),
             "data": action.data[1:]
         }
@@ -171,9 +188,12 @@ def convert_settings(settings):
     return converted
 
 
-def save_settings(settings, _file="test.json"):
-    converted = convert_settings(settings)
-    data = json.dumps(converted, indent=4, separators=(",", ": "))
+def save_settings(settings, _file):
+    """
+    WARNING: convert settings first
+    """
+
+    data = json.dumps(settings, indent=4, separators=(",", ": "))
 
     with open(_file, "w") as file:
         file.write(data)

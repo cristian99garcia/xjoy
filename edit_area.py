@@ -72,6 +72,7 @@ class DrawableObject(GObject.GObject):
 
         self.rect = Rect()
         self.image = None
+        self.id = None
 
     def set_image(self, image, x=None, y=None):
         del self.image
@@ -248,6 +249,7 @@ class DrawableJoystick(GObject.GObject):
 
     __gsignals__ = {
         "redraw": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, []),
+        "finished-settings": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, []),
     }
 
     def __init__(self):
@@ -257,8 +259,11 @@ class DrawableJoystick(GObject.GObject):
         self.background = GdkPixbuf.Pixbuf.new_from_file(U.get_gamepad_image("generic"))
 
         self.objects = {}
+        self.setting = False
+        self.button_ids = {}
+        self.current_button = None
 
-        for name in C.TRANSLATED_BUTTONS.values():
+        for name in C.PLAYSTATION_BUTTON_NAMES:
             self.objects[name] = SpecialDrawableButton(name)
 
         for stick in ["left-stick", "right-stick"]:
@@ -287,19 +292,58 @@ class DrawableJoystick(GObject.GObject):
         self.joystick.connect("button-released", self._released_cb)
         self.joystick.connect("axis-moved", self._axis_moved_cb)
 
+    def set_setting(self, setting):
+        self.setting = setting
+
+        if self.setting:
+            self.current_button = C.PLAYSTATION_BUTTON_NAMES[0]
+
+            for name in C.PLAYSTATION_BUTTON_NAMES:
+                if self.current_button == name:
+                    self.objects[name].set_pressed(True)
+
+        else:
+            self.current_button = None
+
     def _redraw_cb(self, object):
         self.emit("redraw")  # TODO: send a region to redraw
 
     def _pressed_cb(self, joy, button):
-        if button in C.TRANSLATED_BUTTONS:
-            name = C.TRANSLATED_BUTTONS[button]
+        if self.setting:
+            if self.current_button is None:
+                self.current_button = C.PLAYSTATION_BUTTON_NAMES[0]
+                index = 1
 
-            self.objects[name].set_pressed(True)
+            else:
+                index = C.PLAYSTATION_BUTTON_NAMES.index(self.current_button) + 1
+
+            self.objects[self.current_button].set_pressed(False)
+            self.objects[self.current_button].id = button
+            self.button_ids[self.current_button] = button
+
+            if index == len(C.PLAYSTATION_BUTTON_NAMES):
+                self.setting = False
+                self.emit("finished-settings")
+
+            else:
+                self.current_button = C.PLAYSTATION_BUTTON_NAMES[index]
+                self.objects[self.current_button].set_pressed(True)
+
+            return
+
+        for name in self.objects:
+            if self.objects[name].id == button:
+                self.objects[name].set_pressed(True)
+                break
 
     def _released_cb(self, joy, button):
-        if button in C.TRANSLATED_BUTTONS:
-            name = C.TRANSLATED_BUTTONS[button]
-            self.objects[name].set_pressed(False)
+        if self.setting:
+            return
+
+        for obj in self.objects.values():
+            if obj.id == button:
+                obj.set_pressed(False)
+                break
 
     def _axis_moved_cb(self, joy, axis, value):
         if axis == "x":
@@ -320,8 +364,22 @@ class DrawableJoystick(GObject.GObject):
         elif axis == "hat0y":
             self.objects["dpad"].set_y(value)
 
+    def get_buttons(self):
+        return self.button_ids
+
+    def set_buttons(self, buttons):
+        self.setting = False
+        self.buttons_ids = buttons
+
+        for key in self.buttons_ids.keys():
+            self.objects[key].id = self.buttons_ids[key]
+
 
 class EditArea(Gtk.DrawingArea):
+
+    __gsignals__ = {
+        "finished-settings": (GObject.SIGNAL_RUN_LAST, GObject.TYPE_NONE, []),
+    }
 
     def __init__(self):
         Gtk.DrawingArea.__init__(self)
@@ -330,6 +388,9 @@ class EditArea(Gtk.DrawingArea):
         self.set_size_request(690, 428)  # Image size
 
         self.drawable = None
+        self.setting = False
+
+        self.objects = []
 
         self.show_all()
 
@@ -340,12 +401,7 @@ class EditArea(Gtk.DrawingArea):
         Gdk.cairo_set_source_pixbuf(context, self.drawable.background, 0, 7)
         context.paint()
 
-        list = self.drawable.objects.keys()
-        for name in C.FRONT_OBJECTS:
-            list.remove(name)
-            list.insert(-1, name)
-
-        for name in list:
+        for name in self.objects:
             self.draw_object(context, self.drawable.objects[name])
 
     def draw_object(self, context, object):
@@ -369,8 +425,28 @@ class EditArea(Gtk.DrawingArea):
 
         if self.drawable is None or joy.file != self.drawable.joystick.file:
             self.drawable = DrawableJoystick.new_from_joystick(joy)
+
+            self.objects = self.drawable.objects.keys()
+            for name in C.FRONT_OBJECTS:
+                self.objects.remove(name)
+                self.objects.insert(-1, name)
+
             self.drawable.connect("redraw", self._redraw_cb)
+            # self.drawable.set_setting(self.setting)
+            self.drawable.connect("finished-settings", lambda d: self.emit("finished-settings"))
             self.redraw()
 
     def _redraw_cb(self, drawable):
         self.redraw()
+
+    def set_setting(self, setting):
+        self.setting = setting
+
+        if self.drawable is not None:
+            self.drawable.set_setting(setting)
+
+    def get_buttons(self):
+        return self.drawable.get_buttons()
+
+    def set_buttons(self, buttons):
+        self.drawable.set_buttons(buttons)
