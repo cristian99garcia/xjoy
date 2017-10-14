@@ -279,7 +279,6 @@ class DrawableJoystick(GObject.GObject):
         drawable = DrawableJoystick()
         drawable.set_joystick(joy)
 
-        #print drawable.joystick.axis_map
         return drawable
 
     def set_joystick(self, joy):
@@ -391,6 +390,7 @@ class EditArea(Gtk.DrawingArea):
         self.setting = False
 
         self.objects = []
+        self.buttons = {}
 
         self.show_all()
 
@@ -431,8 +431,10 @@ class EditArea(Gtk.DrawingArea):
                 self.objects.remove(name)
                 self.objects.insert(-1, name)
 
+            self.drawable.set_setting(self.setting)
+            self.drawable.set_buttons(self.buttons)
+
             self.drawable.connect("redraw", self._redraw_cb)
-            # self.drawable.set_setting(self.setting)
             self.drawable.connect("finished-settings", lambda d: self.emit("finished-settings"))
             self.redraw()
 
@@ -449,4 +451,7 @@ class EditArea(Gtk.DrawingArea):
         return self.drawable.get_buttons()
 
     def set_buttons(self, buttons):
-        self.drawable.set_buttons(buttons)
+        self.buttons = buttons
+
+        if self.drawable is not None:
+            self.drawable.set_buttons(buttons)

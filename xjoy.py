@@ -28,9 +28,6 @@ if USE_X:
     from xevents.keyboard import Keyboard
 
 
-TESTING = True
-
-
 class XJoyWindow(Gtk.ApplicationWindow):
 
     __gsignals__ = {
@@ -103,8 +100,9 @@ class XJoyApp(Gtk.Application):
             self.window.connect("delete-event", self._delete_event_cb)
             self.window.connect("finished-settings", self._set_cb)
 
-            if TESTING:
+            if C.TESTING:
                 self.settings = C.TEST_SETTINGS
+                self.window.edit_area.set_buttons(C.TEST_BUTTONS)
 
             else:
                 self.settings = {}

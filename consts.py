@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+TESTING = True
+
+
 INPUT_PATH = "/dev/input"
 
 
@@ -148,6 +151,22 @@ TEST_SETTINGS = {
     289: Action(ActionType.MOUSE, [MouseActionType.CLICK, 2]),          # Circle
     290: Action(ActionType.MOUSE, [MouseActionType.CLICK, 1]),          # X
     "rz": Action(ActionType.MOUSE, [MouseActionType.SCROLL_V, 1])
+}
+
+
+TEST_BUTTONS = {
+    "square": 291,
+    "triangle": 288,
+    "r1": 295,
+    "r3": 299,
+    "trigger-right": 293,
+    "start": 297,
+    "trigger-left": 292,
+    "l3": 298,
+    "l1": 294,
+    "x": 290,
+    "circle": 289,
+    "select": 296
 }
 
 
