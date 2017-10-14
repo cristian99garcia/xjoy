@@ -60,12 +60,16 @@ def get_joystick_button_map(devfile):
     return button_map, button_states
 
 
+def get_local_dir():
+    return os.path.abspath(os.path.dirname(__file__))
+
+
 def get_gamepad_image(name):
-    return os.path.join(os.path.dirname(__file__), "data", "gamepads", name + ".png")
+    return os.path.join(get_local_dir(), "data", "gamepads", name + ".png")
 
 
 def get_drawable_image(name, resp_name=None):
-    file = os.path.join(os.path.dirname(__file__), "data", "icons", name + ".png")
+    file = os.path.join(get_local_dir(), "data", "icons", name + ".png")
     if os.path.exists(file):
         return file
 
@@ -75,6 +79,10 @@ def get_drawable_image(name, resp_name=None):
     else:
         # Error
         return None
+
+
+def get_app_icon_file():
+    return os.path.join(get_local_dir(), "data", "icons", "xjoy.svg")
 
 
 def abs(value):

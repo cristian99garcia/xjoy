@@ -6,9 +6,11 @@ import os
 import sys
 import signal
 
-gi.require_version("Gtk", "3.0")
-gi.require_version("Gdk", "3.0")
-gi.require_version("GdkPixbuf", "2.0")
+gi.require_versions({
+    "Gtk": "3.0",
+    "Gdk": "3.0",
+    "GdkPixbuf": "2.0",
+})
 
 from gi.repository import Gtk
 from gi.repository import Gio
@@ -21,9 +23,10 @@ import consts as C
 from edit_area import EditArea
 from joysticks_manager import JoysticksManager
 
+
 USE_X = True  # TODO: detect wayland
 if USE_X:
-    sys.path.append("/home/cristian/Documentos/xjoy/xevents")
+    sys.path.append(os.path.join(U.get_local_dir(), "xevents"))
 
     from xevents.mouse import Mouse
     from xevents.keyboard import Keyboard
@@ -41,7 +44,7 @@ class XJoyWindow(Gtk.ApplicationWindow):
         self.set_size_request(690, 428)
         self.set_resizable(False)
         self.set_title("XJoy")
-        self.set_icon_from_file("data/icons/xjoy.svg")
+        self.set_icon_from_file(U.get_app_icon_file())
 
         self.manager = manager
 
