@@ -76,7 +76,7 @@ class XJoyApp(Gtk.Application):
         self.mouse_movement_id = None
         self.scroll_id = None
         self.setting = False
-        self.hide_window = not C.TESTING
+        self.hide_window = False
         self.trayicon = None
 
         self.keyboard = Keyboard()
@@ -108,9 +108,9 @@ class XJoyApp(Gtk.Application):
         self.set_accels_for_action("app.save-settings", ["<Primary>S"]);
         self.add_action(action);
 
-        action = Gio.SimpleAction.new("reset-buttons", None);
-        action.connect("activate", self.reset_buttons);
-        self.set_accels_for_action("app.reset-buttons", ["<Primary>R"]);
+        action = Gio.SimpleAction.new("reset-objects", None);
+        action.connect("activate", self.reset_objects);
+        self.set_accels_for_action("app.reset-objects", ["<Primary>R"]);
         self.add_action(action);
 
         self.activate()
@@ -126,7 +126,7 @@ class XJoyApp(Gtk.Application):
 
             if C.TESTING:
                 self.settings = C.TEST_SETTINGS
-                self.window.edit_area.set_buttons(C.TEST_BUTTONS)
+                self.window.edit_area.set_objects(C.TEST_OBJECTS)
 
             else:
                 self.settings = {}
@@ -258,9 +258,10 @@ class XJoyApp(Gtk.Application):
 
         if response == Gtk.ResponseType.OK:
             # TODO: Check for read permissions
-            # TODO: Check if it's a real xjoy settings file
-            self.settings, buttons = U.load_settings_from_file(dialog.get_filename())
-            self.window.edit_area.set_buttons(buttons)
+            # TODO: Check if it's a xjoy settings file
+            # TODO: Check if it's a non corrupted xjoy settings file
+            self.settings, objects = U.load_settings_from_file(dialog.get_filename())
+            self.window.edit_area.set_objects(objects)
 
         elif response == Gtk.ResponseType.CANCEL:
             print("Cancel clicked")
@@ -279,7 +280,7 @@ class XJoyApp(Gtk.Application):
 
         if response == Gtk.ResponseType.OK:
             # TODO: Check for write permissions
-            settings = U.convert_settings(self.settings, self.window.edit_area.get_buttons())
+            settings = U.convert_settings(self.settings, self.window.edit_area.get_objects())
             U.save_settings(settings, dialog.get_filename())
 
         elif response == Gtk.ResponseType.CANCEL:
@@ -295,7 +296,7 @@ class XJoyApp(Gtk.Application):
             filter_xjs.add_pattern(pattern)
             dialog.add_filter(filter_xjs)
 
-    def reset_buttons(self, action, *args):
+    def reset_objects(self, action, *args):
         self.setting = True
         self.window.set_setting(True)
 

@@ -129,7 +129,7 @@ class SpecialDrawableButton(DrawableButton):
         self.set_image(self.ireleased)
 
 
-class Direccional(DrawableObject):
+class Directional(DrawableObject):
 
     def __init__(self):
         DrawableObject.__init__(self)
@@ -137,6 +137,11 @@ class Direccional(DrawableObject):
         self.direction = None
         self.x = 0
         self.y = 0
+        self.setting = None
+        self.id = {
+            "x": None,
+            "y": None
+        }
 
         self.images = {
             C.Direction.NONE: None,
@@ -146,7 +151,9 @@ class Direccional(DrawableObject):
             C.Direction.RIGHT + C.Direction.DOWN: None,
             C.Direction.DOWN: None,
             C.Direction.LEFT + C.Direction.DOWN: None,
-            C.Direction.LEFT: None
+            C.Direction.LEFT: None,
+            C.Direction.SETTING_X: None,
+            C.Direction.SETTING_Y: None
         }
 
     def set_direction(self, direction):
@@ -156,6 +163,9 @@ class Direccional(DrawableObject):
         self.direction = direction
         if self.direction in self.images.keys():
             self.set_image(self.images[self.direction])
+
+    def get_direction(self):
+        return self.direction
 
     def set_x(self, x=0):
         if self.x == U.abs(x):
@@ -203,20 +213,22 @@ class Direccional(DrawableObject):
                 self.set_direction(C.Direction.RIGHT + C.Direction.DOWN)
 
 
-class Stick(Direccional):
+class Stick(Directional):
 
     def __init__(self, name):
-        Direccional.__init__(self)
+        Directional.__init__(self)
 
-        self.images[C.Direction.NONE] =                     Image.new_from_name("stick")
-        self.images[C.Direction.UP] =                       Image.new_from_name("stick-up")
-        self.images[C.Direction.RIGHT + C.Direction.UP] =   Image.new_from_name("stick-right-up")
-        self.images[C.Direction.RIGHT] =                    Image.new_from_name("stick-right")
+        self.images[C.Direction.NONE]                     = Image.new_from_name("stick")
+        self.images[C.Direction.UP]                       = Image.new_from_name("stick-up")
+        self.images[C.Direction.RIGHT + C.Direction.UP]   = Image.new_from_name("stick-right-up")
+        self.images[C.Direction.RIGHT]                    = Image.new_from_name("stick-right")
         self.images[C.Direction.RIGHT + C.Direction.DOWN] = Image.new_from_name("stick-right-down")
-        self.images[C.Direction.DOWN] =                     Image.new_from_name("stick-down")
-        self.images[C.Direction.LEFT + C.Direction.DOWN] =  Image.new_from_name("stick-left-down")
-        self.images[C.Direction.LEFT] =                     Image.new_from_name("stick-left")
-        self.images[C.Direction.LEFT + C.Direction.UP] =    Image.new_from_name("stick-left-up")
+        self.images[C.Direction.DOWN]                     = Image.new_from_name("stick-down")
+        self.images[C.Direction.LEFT + C.Direction.DOWN]  = Image.new_from_name("stick-left-down")
+        self.images[C.Direction.LEFT]                     = Image.new_from_name("stick-left")
+        self.images[C.Direction.LEFT + C.Direction.UP]    = Image.new_from_name("stick-left-up")
+        self.images[C.Direction.SETTING_X]                = Image.new_from_name("stick-setting-x")
+        self.images[C.Direction.SETTING_Y]                = Image.new_from_name("stick-setting-y")
 
         if name in C.PLAYSTATION_MAP.keys():
             self.rect.set_pos(*C.PLAYSTATION_MAP[name])
@@ -224,20 +236,22 @@ class Stick(Direccional):
         self.set_image(self.images[C.Direction.NONE])
 
 
-class DPad(Direccional):
+class DPad(Directional):
 
     def __init__(self):
-        Direccional.__init__(self)
+        Directional.__init__(self)
 
-        self.images[C.Direction.NONE] =                     Image.new_from_name("dpad")
-        self.images[C.Direction.UP] =                       Image.new_from_name("dpad-up")
-        self.images[C.Direction.RIGHT + C.Direction.UP] =   Image.new_from_name("dpad-right-up")
-        self.images[C.Direction.RIGHT] =                    Image.new_from_name("dpad-right")
+        self.images[C.Direction.NONE]                     = Image.new_from_name("dpad")
+        self.images[C.Direction.UP]                       = Image.new_from_name("dpad-up")
+        self.images[C.Direction.RIGHT + C.Direction.UP]   = Image.new_from_name("dpad-right-up")
+        self.images[C.Direction.RIGHT]                    = Image.new_from_name("dpad-right")
         self.images[C.Direction.RIGHT + C.Direction.DOWN] = Image.new_from_name("dpad-right-down")
-        self.images[C.Direction.DOWN] =                     Image.new_from_name("dpad-down")
-        self.images[C.Direction.LEFT + C.Direction.DOWN] =  Image.new_from_name("dpad-left-down")
-        self.images[C.Direction.LEFT] =                     Image.new_from_name("dpad-left")
-        self.images[C.Direction.LEFT + C.Direction.UP] =    Image.new_from_name("dpad-left-up")
+        self.images[C.Direction.DOWN]                     = Image.new_from_name("dpad-down")
+        self.images[C.Direction.LEFT + C.Direction.DOWN]  = Image.new_from_name("dpad-left-down")
+        self.images[C.Direction.LEFT]                     = Image.new_from_name("dpad-left")
+        self.images[C.Direction.LEFT + C.Direction.UP]    = Image.new_from_name("dpad-left-up")
+        self.images[C.Direction.SETTING_X]                = Image.new_from_name("dpad-setting-x")
+        self.images[C.Direction.SETTING_Y]                = Image.new_from_name("dpad-setting-y")
 
         if "dpad" in C.PLAYSTATION_MAP:
             self.rect.set_pos(*C.PLAYSTATION_MAP["dpad"])
@@ -260,14 +274,14 @@ class DrawableJoystick(GObject.GObject):
 
         self.objects = {}
         self.setting = False
-        self.button_ids = {}
-        self.current_button = None
+        self.object_ids = {}
+        self.current_object = None
 
-        for name in C.PLAYSTATION_BUTTON_NAMES:
+        for name in C.PLAYSTATION_OBJECT_NAMES[:-3]:
             self.objects[name] = SpecialDrawableButton(name)
 
-        for stick in ["left-stick", "right-stick"]:
-            self.objects[stick] = Stick(stick)
+        for name in C.PLAYSTATION_OBJECT_NAMES[-2:]:  # ["left-stick", "right-stick"]:
+            self.objects[name] = Stick(name)
 
         self.objects["dpad"] = DPad()
 
@@ -295,38 +309,42 @@ class DrawableJoystick(GObject.GObject):
         self.setting = setting
 
         if self.setting:
-            self.current_button = C.PLAYSTATION_BUTTON_NAMES[0]
+            self.current_object = C.PLAYSTATION_OBJECT_NAMES[0]
 
-            for name in C.PLAYSTATION_BUTTON_NAMES:
-                if self.current_button == name:
+            for name in C.PLAYSTATION_OBJECT_NAMES:
+                if self.current_object == name:
                     self.objects[name].set_pressed(True)
 
         else:
-            self.current_button = None
+            self.current_object = None
 
     def _redraw_cb(self, object):
         self.emit("redraw")  # TODO: send a region to redraw
 
     def _pressed_cb(self, joy, button):
         if self.setting:
-            if self.current_button is None:
-                self.current_button = C.PLAYSTATION_BUTTON_NAMES[0]
+            if self.current_object is None:
+                self.current_object = C.PLAYSTATION_OBJECT_NAMES[0]
                 index = 1
 
             else:
-                index = C.PLAYSTATION_BUTTON_NAMES.index(self.current_button) + 1
+                index = C.PLAYSTATION_OBJECT_NAMES.index(self.current_object) + 1
 
-            self.objects[self.current_button].set_pressed(False)
-            self.objects[self.current_button].id = button
-            self.button_ids[self.current_button] = button
+            if index >= C.PLAYSTATION_OBJECT_NAMES.index("dpad"):
+                if index == C.PLAYSTATION_OBJECT_NAMES.index("dpad"):
+                    # Start movements controls (dpads and sticks)
+                    self.objects["dpad"].set_direction(C.Direction.SETTING_X)
+                    self.objects[self.current_object].set_pressed(False)
+                    self.current_object = C.PLAYSTATION_OBJECT_NAMES[index]
 
-            if index == len(C.PLAYSTATION_BUTTON_NAMES):
-                self.setting = False
-                self.emit("finished-settings")
+                return
 
-            else:
-                self.current_button = C.PLAYSTATION_BUTTON_NAMES[index]
-                self.objects[self.current_button].set_pressed(True)
+            self.objects[self.current_object].set_pressed(False)
+            self.objects[self.current_object].id = button
+            self.object_ids[self.current_object] = button
+
+            self.current_object = C.PLAYSTATION_OBJECT_NAMES[index]
+            self.objects[self.current_object].set_pressed(True)
 
             return
 
@@ -344,34 +362,83 @@ class DrawableJoystick(GObject.GObject):
                 obj.set_pressed(False)
                 break
 
+    def get_directional_from_axis(self, axis):
+        for _object in self.objects.values():
+            if issubclass(_object.__class__, Directional):
+                if _object.id["x"] == axis:
+                    return _object, "x"
+
+                elif _object.id["y"] == axis:
+                    return _object, "y"
+
+        return None, None
+
     def _axis_moved_cb(self, joy, axis, value):
-        if axis == "x":
-            self.objects["left-stick"].set_x(value)
+        if axis == "z":  # FIXME: Should ignore it? or is my joystick just broken? 
+            return
 
-        elif axis == "y":
-            self.objects["left-stick"].set_y(value)
+        if self.setting:
+            if self.current_object is None:
+                return
 
-        elif axis == "rx":
-            self.objects["right-stick"].set_x(value)
+            index = C.PLAYSTATION_OBJECT_NAMES.index(self.current_object) + 1
 
-        elif axis == "rz":
-            self.objects["right-stick"].set_y(value)
+            if index < C.PLAYSTATION_OBJECT_NAMES.index("dpad"):
+                return
 
-        elif axis == "hat0x":
-            self.objects["dpad"].set_x(value)
+            if value in [-1, 1]:
+                _object, direction = self.get_directional_from_axis(axis)
+                if _object is not None:
+                    # Already setted, prevents set the same stick/dpad
+                    return
 
-        elif axis == "hat0y":
-            self.objects["dpad"].set_y(value)
+                direction = self.objects[self.current_object].get_direction()
 
-    def get_buttons(self):
-        return self.button_ids
+                if direction == C.Direction.SETTING_X:
+                    # If direction == X, set it to Y and wait
+                    self.objects[self.current_object].id["x"] = axis
+                    self.objects[self.current_object].set_direction(C.Direction.SETTING_Y)
 
-    def set_buttons(self, buttons):
+                    self.object_ids[self.current_object] = self.objects[self.current_object].id
+
+                elif direction == C.Direction.SETTING_Y:
+                    # If direction == Y, continue with the next directional object or
+                    # finish the configuration, it depends if the current setting
+                    # directional object is the last object
+                    self.objects[self.current_object].id["y"] = axis
+                    self.objects[self.current_object].set_direction(C.Direction.NONE)
+
+                    self.object_ids[self.current_object] = self.objects[self.current_object].id
+
+                    if index == len(C.PLAYSTATION_OBJECT_NAMES):
+                        self.setting = False
+                        self.emit("finished-settings")
+
+                    else:
+                        self.current_object = C.PLAYSTATION_OBJECT_NAMES[index]
+                        self.objects[self.current_object].set_direction(C.Direction.SETTING_X)
+
+            return
+
+        _object, direction = self.get_directional_from_axis(axis)
+        if _object is not None:
+            if direction == "x":
+                _object.set_x(value)
+
+            elif direction == "y":
+                _object.set_y(value)
+
+        return
+
+    def get_objects(self):
+        return self.object_ids
+
+    def set_objects(self, objects):
         self.setting = False
-        self.buttons_ids = buttons
+        self.object_ids = objects
 
-        for key in self.buttons_ids.keys():
-            self.objects[key].id = self.buttons_ids[key]
+        for key in self.object_ids.keys():
+            self.objects[key].id = self.object_ids[key]
 
 
 class EditArea(Gtk.DrawingArea):
@@ -390,7 +457,7 @@ class EditArea(Gtk.DrawingArea):
         self.setting = False
 
         self.objects = []
-        self.buttons = {}
+        self.objects_ids = {}
 
         self.show_all()
 
@@ -432,7 +499,7 @@ class EditArea(Gtk.DrawingArea):
                 self.objects.insert(-1, name)
 
             self.drawable.set_setting(self.setting)
-            self.drawable.set_buttons(self.buttons)
+            self.drawable.set_objects(self.objects_ids)
 
             self.drawable.connect("redraw", self._redraw_cb)
             self.drawable.connect("finished-settings", lambda d: self.emit("finished-settings"))
@@ -447,11 +514,11 @@ class EditArea(Gtk.DrawingArea):
         if self.drawable is not None:
             self.drawable.set_setting(setting)
 
-    def get_buttons(self):
-        return self.drawable.get_buttons()
+    def get_objects(self):
+        return self.drawable.get_objects()
 
-    def set_buttons(self, buttons):
-        self.buttons = buttons
+    def set_objects(self, objects):
+        self.objects_ids = objects
 
         if self.drawable is not None:
-            self.drawable.set_buttons(buttons)
+            self.drawable.set_objects(objects)

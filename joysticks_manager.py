@@ -72,15 +72,18 @@ class Joystick(GObject.GObject):
                     self.button_states[button] = value
 
                     if value:
+                        # print "pressed", button
                         self.emit("button-pressed", button)
 
                     else:
+                        # print "released", button
                         self.emit("button-released", button)
 
             if type & 0x02:
                 axis = self.axis_map[number]
                 if axis:
                     fvalue = value / 32767.0
+                    # print "axis", axis, fvalue
                     self.axis_states[axis] = fvalue
                     self.emit("axis-moved", axis, fvalue)
 

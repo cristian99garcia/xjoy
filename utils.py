@@ -132,10 +132,12 @@ def load_settings_from_file(_file):
 
     Settings structure:
     {
-        "buttons": {
-            NAME: id,
-            NAME: id,
-            NAME: id
+        "objects": {
+            BUTTON_NAME: id,
+            DIRECTIONAL_NAME: {
+                "x": id,
+                "y": id
+            }
         },
         "actions": {
             EVENT_NAME: {
@@ -171,7 +173,7 @@ def load_settings_from_file(_file):
     with open(_file, "r") as file:
         data = json.loads(file.read())
 
-    buttons = data["buttons"]
+    objects = data["objects"]
     actions = data["actions"]
 
     for key in actions.keys():
@@ -182,16 +184,16 @@ def load_settings_from_file(_file):
 
         converted[name] = C.Action(device, [event_type] + actions[key]["data"])
 
-    return converted, buttons
+    return converted, objects
 
 
-def convert_settings(settings, buttons):
+def convert_settings(settings, objects):
     """
     Convert a settings dict to a ready to save dict
     """
     converted = {
-        "buttons": buttons,
-        "actions": {}
+        "actions": {},
+        "objects": objects,
     }
 
     for key in settings.keys():

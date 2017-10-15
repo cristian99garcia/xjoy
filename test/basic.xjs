@@ -1,17 +1,28 @@
 {
-    "buttons": {
+    "objects": {
         "square": 291,
         "triangle": 288,
         "r1": 295,
-        "r3": 299,
+        "right-stick": {
+            "y": "rz",
+            "x": "rx"
+        },
         "trigger-right": 293,
         "start": 297,
         "trigger-left": 292,
         "l3": 298,
+        "left-stick": {
+            "y": "y",
+            "x": "x"
+        },
         "l1": 294,
         "x": 290,
         "circle": 289,
-        "select": 296
+        "select": 296,
+        "dpad": {
+            "y": "hat0y",
+            "x": "hat0x"
+        }
     },
     "actions": {
         "y": {

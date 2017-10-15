@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-TESTING = True
+TESTING = False
 
 APP_ID = "org.zades.xjoy"
 INPUT_PATH = "/dev/input"
@@ -79,7 +79,7 @@ BUTTONS = {
 }
 
 
-PLAYSTATION_BUTTON_NAMES = [
+PLAYSTATION_OBJECT_NAMES = [
     "x",
     "circle",
     "triangle",
@@ -91,7 +91,10 @@ PLAYSTATION_BUTTON_NAMES = [
     "select",
     "start",
     "l3",
-    "r3"
+    "r3",
+    "dpad",
+    "left-stick",
+    "right-stick",
 ]
 
 
@@ -175,6 +178,8 @@ class Direction:
     RIGHT = "right"
     DOWN = "down"
     LEFT = "left"
+    SETTING_X = "settingx"
+    SETTING_Y = "settingy"
     NONE = "none"
 
 
